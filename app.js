@@ -212,7 +212,10 @@ async function loadGraph() {
             edges.push({ 
                 from: pair.from, 
                 to: pair.to, 
-                color: { color: `rgba(28, 30, 33, ${edgeOpacity})`, highlight: '#111827' },
+                color: { 
+                    color: isDarkMode ? `rgba(249, 250, 251, ${edgeOpacity})` : `rgba(28, 30, 33, ${edgeOpacity})`, 
+                    highlight: isDarkMode ? '#f9fafb' : '#111827' 
+                },
                 width: edgeWeight,
                 smooth: { type: 'continuous' }
             });
@@ -540,18 +543,36 @@ let isDarkMode = false;
 darkModeToggle.addEventListener('click', () => {
     isDarkMode = document.body.classList.toggle('dark-mode');
     if (network) {
-        const updates = allIdeas.map(idea => {
-            const bg = isDarkMode ? getDarkColorFromName(idea.name || "Unknown") : getColorFromName(idea.name || "Unknown");
+        // Update nodes safely preserving font sizes
+        const nodeUpdates = network.body.data.nodes.get().map(node => {
+            const idea = allIdeas.find(i => i.id === node.id);
+            const bg = isDarkMode ? getDarkColorFromName(idea?.name || "Unknown") : getColorFromName(idea?.name || "Unknown");
             return {
-                id: idea.id,
+                id: node.id,
                 color: {
                     background: bg,
                     highlight: { background: bg },
                     hover: { background: bg }
                 },
-                font: { color: isDarkMode ? '#f9fafb' : '#111827' }
+                font: Object.assign({}, node.font, { color: isDarkMode ? '#f9fafb' : '#111827' })
             };
         });
-        network.body.data.nodes.update(updates);
+        network.body.data.nodes.update(nodeUpdates);
+
+        // Update edges correctly
+        const edgeUpdates = network.body.data.edges.get().map(edge => {
+            const currentRgba = (edge.color && edge.color.color) ? edge.color.color : '';
+            let newColor = currentRgba;
+            if (isDarkMode) {
+                newColor = currentRgba.replace('28, 30, 33', '249, 250, 251');
+            } else {
+                newColor = currentRgba.replace('249, 250, 251', '28, 30, 33');
+            }
+            return {
+                id: edge.id,
+                color: { color: newColor, highlight: isDarkMode ? '#f9fafb' : '#111827' }
+            };
+        });
+        network.body.data.edges.update(edgeUpdates);
     }
 });
