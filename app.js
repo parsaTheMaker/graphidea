@@ -31,6 +31,7 @@ const searchInput = document.getElementById('searchInput');
 const searchBtn = document.getElementById('searchBtn');
 const exportBtn = document.getElementById('exportBtn');
 const exportCsvBtn = document.getElementById('exportCsvBtn');
+const exportJsonBtn = document.getElementById('exportJsonBtn');
 const zoomInBtn = document.getElementById('zoomInBtn');
 const zoomOutBtn = document.getElementById('zoomOutBtn');
 const fitViewBtn = document.getElementById('fitViewBtn');
@@ -529,6 +530,37 @@ exportBtn.addEventListener('click', () => {
         document.body.removeChild(a);
     } else {
         alert("Canvas not loaded yet!");
+    }
+});
+
+// Export Database as JSON
+exportJsonBtn.addEventListener('click', () => {
+    try {
+        if (!allIdeas || allIdeas.length === 0) {
+            alert("No data to export! The graph is empty.");
+            return;
+        }
+
+        const jsonString = JSON.stringify(allIdeas, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const link = document.createElement("a");
+        link.style.display = 'none';
+        link.href = url;
+        link.download = "Brainstorming_Database.json";
+        
+        document.body.appendChild(link);
+        link.click();
+        
+        setTimeout(() => {
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }, 1000);
+        
+    } catch (err) {
+        console.error("JSON Export Error:", err);
+        alert("Failed to export: " + err.message);
     }
 });
 
