@@ -535,13 +535,22 @@ exportBtn.addEventListener('click', () => {
 
 // Export Database as JSON
 exportJsonBtn.addEventListener('click', () => {
+    console.log("JSON Export button clicked");
     try {
         if (!allIdeas || allIdeas.length === 0) {
             alert("No data to export! The graph is empty.");
             return;
         }
 
-        const jsonString = JSON.stringify(allIdeas, null, 2);
+        // Clean up the data (remove massive AI embedding arrays from the JSON)
+        const cleanIdeas = allIdeas.map(idea => {
+            const { embedding, ...cleanIdea } = idea;
+            return cleanIdea;
+        });
+
+        const jsonString = JSON.stringify(cleanIdeas, null, 2);
+        console.log("JSON stringified successfully. Length:", jsonString.length);
+        
         const blob = new Blob([jsonString], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         
@@ -551,16 +560,18 @@ exportJsonBtn.addEventListener('click', () => {
         link.download = "Brainstorming_Database.json";
         
         document.body.appendChild(link);
+        console.log("Firing JSON click...");
         link.click();
         
         setTimeout(() => {
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
+            console.log("JSON cleanup finished.");
         }, 1000);
         
     } catch (err) {
         console.error("JSON Export Error:", err);
-        alert("Failed to export: " + err.message);
+        alert("Failed to export JSON: " + err.message);
     }
 });
 
