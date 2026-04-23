@@ -1,0 +1,14 @@
+/* Login Screen Styles */
+.overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: #333; z-index: 1000;
+    display: flex; justify-content: center; align-items: center;
+}
+.login-box {
+    background: white; padding: 30px; border-radius: 8px;
+    text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    display: flex; flex-direction: column; gap: 10px;
+}
+#appContainer {
+    display: none; /* JS will turn this to 'flex' after login */
+}

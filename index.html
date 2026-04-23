@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brainstorming Network</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+</head>
+<body>
+
+    <div id="loginScreen" class="overlay">
+        <div class="login-box">
+            <h2>Team Access</h2>
+            <p>Please enter the team password to enter.</p>
+            <input type="password" id="teamPassword" placeholder="Password...">
+            <button id="loginBtn">Unlock App</button>
+            <p id="loginError" style="color: red;"></p>
+        </div>
+    </div>
+
+    <div id="appContainer" style="display: none; width: 100%; height: 100%; display: flex;">
+        <div class="sidebar">
+            <h2>Submit an Idea</h2>
+            <form id="ideaForm">
+                <input type="text" id="authorName" placeholder="Your Name" required>
+                <input type="text" id="ideaTitle" placeholder="Idea Title" required>
+                <textarea id="ideaDesc" placeholder="Describe your idea in detail..." rows="5" required></textarea>
+                <button type="submit" id="submitBtn">Submit & Map Idea</button>
+            </form>
+            <p id="statusMsg"></p>
+        </div>
+
+        <div class="main-content">
+            <div id="mynetwork"></div> 
+        </div>
+    </div>
+
+    <div id="ideaModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2 id="modalTitle">Title</h2>
+            <p><strong>Submitted by:</strong> <span id="modalAuthor">Name</span></p>
+            <p id="modalDesc">Description goes here...</p>
+        </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
