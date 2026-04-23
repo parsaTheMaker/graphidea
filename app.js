@@ -534,9 +534,10 @@ exportBtn.addEventListener('click', () => {
 
 // Export Database as CSV
 exportCsvBtn.addEventListener('click', () => {
+    console.log("CSV Export button clicked");
     try {
         if (!allIdeas || allIdeas.length === 0) {
-            alert("No data to export!");
+            alert("No data to export! The graph is empty.");
             return;
         }
 
@@ -572,17 +573,27 @@ exportCsvBtn.addEventListener('click', () => {
         });
 
         const csvString = csvRows.join('\n');
+        console.log("CSV String generated successfully. Length:", csvString.length);
         
-        // Use Data URI for maximum compatibility
-        const encodedUri = 'data:text/csv;charset=utf-8,' + encodeURIComponent('\uFEFF' + csvString);
+        // Use Blob for proper file handling
+        const blob = new Blob(['\uFEFF', csvString], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
         
         const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", "Brainstorming_Database.csv");
+        link.style.display = 'none';
+        link.href = url;
+        link.download = "Brainstorming_Database.csv";
         
         document.body.appendChild(link);
+        console.log("Firing click...");
         link.click();
-        document.body.removeChild(link);
+        
+        // Clean up safely
+        setTimeout(() => {
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            console.log("Cleanup finished.");
+        }, 1000);
         
     } catch (err) {
         console.error("CSV Export Error:", err);
