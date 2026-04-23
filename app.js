@@ -38,6 +38,11 @@ const modalUpvoteBtn = document.getElementById('modalUpvoteBtn');
 const modalDownvoteBtn = document.getElementById('modalDownvoteBtn');
 const modalVotesDisplay = document.getElementById('modalVotesDisplay');
 const darkModeToggle = document.getElementById('darkModeToggle');
+const infoBtn = document.getElementById('infoBtn');
+
+const infoModal = document.getElementById('infoModal');
+const closeInfoBtn = document.getElementById('closeInfoBtn');
+const dismissInfoBtn = document.getElementById('dismissInfoBtn');
 
 const addCommentBtn = document.getElementById('addCommentBtn');
 const newCommentInput = document.getElementById('newCommentInput');
@@ -66,8 +71,18 @@ loginBtn.addEventListener('click', async () => {
         loginScreen.style.display = 'none';
         appContainer.classList.remove('hidden');
         loadGraph();
+
+        if (!localStorage.getItem('hasSeenInvite')) {
+            infoModal.classList.remove('hidden');
+            localStorage.setItem('hasSeenInvite', 'true');
+        }
     }
 });
+
+// Info Modal Controls
+infoBtn.addEventListener('click', () => infoModal.classList.remove('hidden'));
+closeInfoBtn.addEventListener('click', () => infoModal.classList.add('hidden'));
+dismissInfoBtn.addEventListener('click', () => infoModal.classList.add('hidden'));
 
 // Math for comparing AI Vectors
 function cosineSimilarity(vecA, vecB) {

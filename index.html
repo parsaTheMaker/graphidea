@@ -37,8 +37,12 @@
                     <h2>Brainstorming</h2>
                     <p>Submit a new concept</p>
                 </div>
-                <!-- 4. Dark Mode Toggle -->
-                <button id="darkModeToggle" class="btn secondary-btn" style="padding: 0.5rem; font-size: 1.2rem;">🌙</button>
+                <div style="display: flex; gap: 5px;">
+                    <!-- Info Toggle -->
+                    <button id="infoBtn" class="btn secondary-btn" style="padding: 0.5rem; font-size: 1.2rem;" title="How to use">ℹ️</button>
+                    <!-- Dark Mode Toggle -->
+                    <button id="darkModeToggle" class="btn secondary-btn" style="padding: 0.5rem; font-size: 1.2rem;">🌙</button>
+                </div>
             </div>
 
             <!-- 1. Search and Filter -->
@@ -165,6 +169,28 @@
     </div>
 
     <!-- Right-click Context Menu has been removed as per cleaner UI requirements -->
+
+    <!-- Info / Invite Modal -->
+    <div id="infoModal" class="modal hidden">
+        <div class="modal-card">
+            <button class="close-btn" aria-label="Close" id="closeInfoBtn">&times;</button>
+            <h3>Welcome to the Brainstorming Network 🧠</h3>
+            <div class="modal-body" style="font-size: 0.95rem; line-height: 1.6; margin-bottom: 1.5rem; text-align: left;">
+                <p>This platform uses an embedded AI model to build an interconnected web of our team's concepts.</p>
+                <br>
+                <strong>How to use it:</strong>
+                <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                    <li><strong>Submit:</strong> Add your concept via the sidebar.</li>
+                    <li><strong>AI Connections:</strong> The engine reads your text and automatically connects it to other nodes that share semantic similarity.</li>
+                    <li><strong>Vote & Discuss:</strong> Click any idea to Upvote it (which makes it visually grow) or add Comments.</li>
+                    <li><strong>Navigate:</strong> The graph will automatically organize and lock into place. Use the <code>&gt;&lt;</code> button to manually gather scattered nodes!</li>
+                </ul>
+            </div>
+            <div class="modal-actions modal-footer">
+                <button id="dismissInfoBtn" class="btn primary-btn btn-block">Got it, let's go!</button>
+            </div>
+        </div>
+    </div>
 
     <script type="module" src="app.js"></script>
 </body>
