@@ -534,46 +534,60 @@ exportBtn.addEventListener('click', () => {
 
 // Export Database as CSV
 exportCsvBtn.addEventListener('click', () => {
-    if (!allIdeas || allIdeas.length === 0) {
-        alert("No data to export!");
-        return;
+    try {
+        if (!allIdeas || allIdeas.length === 0) {
+            alert("No data to export!");
+            return;
+        }
+
+        const headers = ['ID', 'Creator Name', 'Idea Title', 'Description', 'Tags', 'Upvotes', 'Downvotes', 'Net Score', 'Comments Count'];
+        
+        const escapeCsv = (str) => {
+            if (str == null) return '""';
+            return `"${String(str).replace(/"/g, '""')}"`;
+        };
+
+        const csvRows = [headers.join(',')];
+
+        allIdeas.forEach(idea => {
+            let commentsCount = 0;
+            if (Array.isArray(idea.comments)) {
+                commentsCount = idea.comments.length;
+            } else if (typeof idea.comments === 'string') {
+                try { commentsCount = JSON.parse(idea.comments).length; } catch(e) {}
+            }
+
+            const row = [
+                idea.id,
+                escapeCsv(idea.name),
+                escapeCsv(idea.title),
+                escapeCsv(idea.description),
+                escapeCsv(idea.tags),
+                idea.votes || 0,
+                idea.downvotes || 0,
+                (idea.votes || 0) - (idea.downvotes || 0),
+                commentsCount
+            ];
+            csvRows.push(row.join(','));
+        });
+
+        const csvString = csvRows.join('\n');
+        
+        // Use Data URI for maximum compatibility
+        const encodedUri = 'data:text/csv;charset=utf-8,' + encodeURIComponent('\uFEFF' + csvString);
+        
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "Brainstorming_Database.csv");
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+    } catch (err) {
+        console.error("CSV Export Error:", err);
+        alert("Failed to export: " + err.message);
     }
-
-    const headers = ['ID', 'Creator Name', 'Idea Title', 'Description', 'Tags', 'Upvotes', 'Downvotes', 'Net Score', 'Comments Count'];
-    
-    const escapeCsv = (str) => {
-        if (str == null) return '""';
-        return `"${String(str).replace(/"/g, '""')}"`;
-    };
-
-    const csvRows = [headers.join(',')];
-
-    allIdeas.forEach(idea => {
-        const row = [
-            idea.id,
-            escapeCsv(idea.name),
-            escapeCsv(idea.title),
-            escapeCsv(idea.description),
-            escapeCsv(idea.tags),
-            idea.votes || 0,
-            idea.downvotes || 0,
-            (idea.votes || 0) - (idea.downvotes || 0),
-            idea.comments ? idea.comments.length : 0
-        ];
-        csvRows.push(row.join(','));
-    });
-
-    const csvString = csvRows.join('\n');
-    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'Brainstorming_Database.csv';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
 });
 
 // Voting Logic
