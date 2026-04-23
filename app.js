@@ -480,7 +480,7 @@ searchBtn.addEventListener('click', async () => {
         console.error("Semantic search failed", e);
     }
     
-    searchBtn.innerText = "Search";
+    searchBtn.innerText = "🔍";
     searchBtn.disabled = false;
 });
 
