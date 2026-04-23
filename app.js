@@ -90,6 +90,15 @@ function getColorFromName(name) {
     return `hsl(${hue}, 80%, 85%)`; 
 }
 
+function getDarkColorFromName(name) {
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+        hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const hue = Math.abs(hash) % 360;
+    return `hsl(${hue}, 60%, 25%)`; 
+}
+
 // Node Size Calculator
 function getNodeSize(votes, downvotes) {
     const score = (votes || 0) - (downvotes || 0);
@@ -154,7 +163,7 @@ async function loadGraph() {
 
     // Styling for Nodes
     allIdeas.forEach(idea => {
-        const authorColor = getColorFromName(idea.name || "Unknown");
+        const authorColor = isDarkMode ? getDarkColorFromName(idea.name || "Unknown") : getColorFromName(idea.name || "Unknown");
         const size = getNodeSize(idea.votes, idea.downvotes);
         nodes.push({ 
             id: idea.id, 
@@ -167,7 +176,7 @@ async function loadGraph() {
                 highlight: { background: authorColor, border: '#111827' },
                 hover: { background: authorColor, border: '#9ca3af' }
             },
-            font: { color: '#111827', face: 'Inter', size: size.font, multi: true },
+            font: { color: isDarkMode ? '#f9fafb' : '#111827', face: 'Inter', size: size.font, multi: true },
             margin: size.margin,
             shadow: {
                 enabled: true,
@@ -214,19 +223,24 @@ async function loadGraph() {
     const graphData = { nodes: new vis.DataSet(nodes), edges: new vis.DataSet(edges) };
     const options = { 
         physics: { 
-            stabilization: { enabled: true, iterations: 150 },
-            barnesHut: { 
-                springLength: 200, 
-                springConstant: 0.04,
-                centralGravity: 0.25,
-                avoidOverlap: 1
-            } 
+            solver: 'repulsion',
+            repulsion: {
+                nodeDistance: 250,
+                springLength: 200,
+                springConstant: 0.05
+            },
+            stabilization: { enabled: true, iterations: 200 }
         },
         interaction: { hover: true, tooltipDelay: 200 }
     };
     
     if (network) network.destroy();
     network = new vis.Network(container, graphData, options);
+
+    network.on("stabilizationIterationsDone", function () {
+        network.setOptions({ physics: { enabled: false } });
+        network.fit({ padding: 50, animation: { duration: 800 } });
+    });
 
     network.on("click", function (params) {
         if (params.nodes.length > 0) {
@@ -457,28 +471,8 @@ fitViewBtn.addEventListener('click', () => {
 // Gather Nodes Automatically
 gatherBtn.addEventListener('click', () => {
     if (!network) return;
-    
-    // Temporarily increase gravity to pull nodes together
-    network.setOptions({
-        physics: {
-            barnesHut: {
-                centralGravity: 0.8,
-                springLength: 100
-            }
-        }
-    });
-
-    // Return to normal resting physics after a brief pull
-    setTimeout(() => {
-        network.setOptions({
-            physics: {
-                barnesHut: {
-                    centralGravity: 0.25,
-                    springLength: 200
-                }
-            }
-        });
-    }, 1200);
+    network.setOptions({ physics: { enabled: true } });
+    network.stabilize(100);
 });
 
 // Export Graph as Image
@@ -542,6 +536,22 @@ modalUpvoteBtn.addEventListener('click', () => castVote(true));
 modalDownvoteBtn.addEventListener('click', () => castVote(false));
 
 // Dark mode toggle
+let isDarkMode = false;
 darkModeToggle.addEventListener('click', () => {
-    document.body.classList.toggle('dark-mode');
+    isDarkMode = document.body.classList.toggle('dark-mode');
+    if (network) {
+        const updates = allIdeas.map(idea => {
+            const bg = isDarkMode ? getDarkColorFromName(idea.name || "Unknown") : getColorFromName(idea.name || "Unknown");
+            return {
+                id: idea.id,
+                color: {
+                    background: bg,
+                    highlight: { background: bg },
+                    hover: { background: bg }
+                },
+                font: { color: isDarkMode ? '#f9fafb' : '#111827' }
+            };
+        });
+        network.body.data.nodes.update(updates);
+    }
 });
