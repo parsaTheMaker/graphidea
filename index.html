@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,6 +13,7 @@
     <link rel="stylesheet" href="style.css">
     <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
 </head>
+
 <body>
 
     <!-- Login Screen -->
@@ -34,6 +36,13 @@
                 <h2>Brainstorming</h2>
                 <p>Submit a new concept</p>
             </div>
+
+            <!-- 1. Search and Filter -->
+            <div class="search-section form-group">
+                <input type="text" id="searchInput" placeholder="Search ideas or authors...">
+            </div>
+
+            <hr class="sidebar-divider">
             
             <form id="ideaForm" class="idea-form">
                 <div class="form-group">
@@ -42,7 +51,7 @@
                 </div>
                 <div class="form-group">
                     <label for="ideaTitle">Idea Title</label>
-                    <input type="text" id="ideaTitle" placeholder="e.g. Gravity powered car" required>
+                    <input type="text" id="ideaTitle" placeholder="e.g. consultancy for import of cars" required>
                 </div>
                 <div class="form-group">
                     <label for="ideaDesc">Description</label>
@@ -51,10 +60,22 @@
                 <button type="submit" id="submitBtn" class="btn primary-btn btn-block">Add to Graph</button>
             </form>
             <div id="statusMsg" class="status-msg"></div>
+
+            <hr class="sidebar-divider">
+
+            <!-- 5. Export Button -->
+            <button id="exportBtn" class="btn secondary-btn btn-block">Download as PNG</button>
         </aside>
 
         <main class="main-content">
-            <div id="mynetwork"></div> 
+            <!-- 4. Canvas Controls -->
+            <div class="canvas-controls">
+                <button id="zoomInBtn" class="btn control-btn" title="Zoom In">+</button>
+                <button id="zoomOutBtn" class="btn control-btn" title="Zoom Out">-</button>
+                <button id="fitViewBtn" class="btn control-btn" title="Fit to Screen">[ ]</button>
+            </div>
+            
+            <div id="mynetwork"></div>
         </main>
     </div>
 
@@ -62,17 +83,23 @@
     <div id="ideaModal" class="modal hidden">
         <div class="modal-card">
             <button class="close-btn" aria-label="Close" id="closeModalBtn">&times;</button>
-            
+
             <!-- View Mode -->
             <div id="modalViewMode">
                 <h3 id="modalTitle">Title</h3>
                 <span class="badge" id="modalAuthor">Name</span>
-                
+
                 <div class="modal-body">
                     <p id="modalDesc">Description goes here...</p>
                 </div>
+                
+                <div class="votes-section">
+                    <span id="modalVotesDisplay">0 Votes</span>
+                </div>
 
                 <div class="modal-actions modal-footer">
+                    <!-- 3. Upvote Button -->
+                    <button id="modalUpvoteBtn" class="btn primary-btn">Upvote</button>
                     <button id="modalEditBtn" class="btn secondary-btn">Edit Idea</button>
                     <button id="modalDeleteBtn" class="btn danger-btn">Delete Node</button>
                 </div>
@@ -94,7 +121,7 @@
                     <label for="editIdeaDesc">Description</label>
                     <textarea id="editIdeaDesc" rows="5" required></textarea>
                 </div>
-                
+
                 <div id="editStatusMsg" class="status-msg"></div>
 
                 <div class="modal-actions modal-footer">
@@ -109,4 +136,5 @@
 
     <script type="module" src="app.js"></script>
 </body>
+
 </html>

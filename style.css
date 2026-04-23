@@ -164,8 +164,19 @@ h3 { font-size: 1.25rem; margin-bottom: 1rem; }
     z-index: 10;
 }
 
-.sidebar-header { margin-bottom: 2rem; }
+.sidebar-header { margin-bottom: 1.5rem; }
 .sidebar-header p { color: var(--text-secondary); font-size: 0.875rem; }
+
+.sidebar-divider {
+    border: 0;
+    height: 1px;
+    background: var(--border-color);
+    margin: 1.5rem 0;
+}
+
+.search-section {
+    margin-bottom: 0;
+}
 
 .main-content {
     flex: 1;
@@ -176,6 +187,36 @@ h3 { font-size: 1.25rem; margin-bottom: 1rem; }
 #mynetwork {
     width: 100%;
     height: 100%;
+}
+
+.canvas-controls {
+    position: absolute;
+    bottom: 2rem;
+    right: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    z-index: 20;
+}
+
+.control-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #fff;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
+    font-size: 1.25rem;
+    padding: 0;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.control-btn:hover {
+    background-color: #f9fafb;
+    transform: translateY(-1px);
 }
 
 /* Modal */
@@ -229,6 +270,18 @@ h3 { font-size: 1.25rem; margin-bottom: 1rem; }
     border-radius: 6px;
     border: 1px solid var(--border-color);
     min-height: 60px;
+}
+
+.votes-section {
+    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+#modalVotesDisplay {
+    font-weight: 600;
+    color: var(--primary-color);
 }
 
 .modal-footer {

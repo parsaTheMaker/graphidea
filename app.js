@@ -27,6 +27,14 @@ const modalDeleteBtn = document.getElementById('modalDeleteBtn');
 const saveEditBtn = document.getElementById('saveEditBtn');
 const cancelEditBtn = document.getElementById('cancelEditBtn');
 
+const searchInput = document.getElementById('searchInput');
+const exportBtn = document.getElementById('exportBtn');
+const zoomInBtn = document.getElementById('zoomInBtn');
+const zoomOutBtn = document.getElementById('zoomOutBtn');
+const fitViewBtn = document.getElementById('fitViewBtn');
+const modalUpvoteBtn = document.getElementById('modalUpvoteBtn');
+const modalVotesDisplay = document.getElementById('modalVotesDisplay');
+
 let allIdeas = []; 
 let network = null;
 let currentViewedNodeId = null; 
@@ -141,8 +149,8 @@ async function loadGraph() {
                 highlight: { background: authorColor, border: '#111827' },
                 hover: { background: authorColor, border: '#9ca3af' }
             },
-            font: { color: '#111827', face: 'Inter', size: 14, multi: true },
-            margin: 14, // Increased margin for inside padding
+            font: { color: '#111827', face: 'Inter', size: 14 + ((idea.votes || 0) * 1.5), multi: true },
+            margin: 14 + (idea.votes || 0), // Increased margin for inside padding
             shadow: {
                 enabled: true,
                 color: 'rgba(0,0,0,0.08)',
@@ -222,6 +230,9 @@ function openViewModal(nodeId) {
     document.getElementById('modalTitle').innerText = idea.title;
     document.getElementById('modalAuthor').innerText = idea.name;
     document.getElementById('modalDesc').innerText = idea.description;
+    
+    // Upvote data
+    modalVotesDisplay.innerText = `${idea.votes || 0} Votes`;
     
     document.getElementById('editStatusMsg').innerText = "";
     
@@ -325,3 +336,75 @@ closeBtn.onclick = () => modal.classList.add('hidden');
 window.onclick = (e) => { 
     if (e.target === modal) modal.classList.add('hidden'); 
 };
+
+// --- NEW FEATURES ---
+
+// Search Filter
+searchInput.addEventListener('input', (e) => {
+    if (!network) return;
+    const term = e.target.value.toLowerCase();
+    const updateNodes = [];
+    allIdeas.forEach(idea => {
+        const match = (idea.title && idea.title.toLowerCase().includes(term)) || 
+                      (idea.name && idea.name.toLowerCase().includes(term));
+        updateNodes.push({ id: idea.id, hidden: !match });
+    });
+    network.body.data.nodes.update(updateNodes);
+});
+
+// Canvas Controls
+zoomInBtn.addEventListener('click', () => {
+    if (network) network.moveTo({ scale: network.getScale() * 1.2 });
+});
+
+zoomOutBtn.addEventListener('click', () => {
+    if (network) network.moveTo({ scale: network.getScale() / 1.2 });
+});
+
+fitViewBtn.addEventListener('click', () => {
+    if (network) network.fit();
+});
+
+// Export Graph as Image
+exportBtn.addEventListener('click', () => {
+    const canvas = document.querySelector('#mynetwork canvas');
+    if (canvas) {
+        const url = canvas.toDataURL('image/png');
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'Brainstorming_Graph.png';
+        a.click();
+    }
+});
+
+// Upvote Logic
+modalUpvoteBtn.addEventListener('click', async () => {
+    if (!currentViewedNodeId) return;
+    const idea = allIdeas.find(i => i.id === currentViewedNodeId);
+    const newVotes = (idea.votes || 0) + 1;
+    
+    modalUpvoteBtn.disabled = true;
+    modalUpvoteBtn.innerText = "Voting...";
+
+    const { error } = await supabase.from('ideas').update({ votes: newVotes }).eq('id', currentViewedNodeId);
+    
+    modalUpvoteBtn.disabled = false;
+    modalUpvoteBtn.innerText = "Upvote";
+
+    if (!error) {
+        idea.votes = newVotes;
+        modalVotesDisplay.innerText = `${newVotes} Votes`;
+        
+        // Dynamically update the visual size on the graph
+        if (network) {
+            network.body.data.nodes.update([{ 
+                id: currentViewedNodeId, 
+                font: { size: 14 + (newVotes * 1.5) },
+                margin: 14 + newVotes
+            }]);
+        }
+    } else {
+        console.error("Failed to upvote", error);
+        alert("Error upvoting. Please try again.");
+    }
+});
