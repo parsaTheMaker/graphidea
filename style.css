@@ -175,8 +175,32 @@ h3 { font-size: 1.25rem; margin-bottom: 1rem; }
     margin: 1.5rem 0;
 }
 
-.search-section {
-    margin-bottom: 0;
+.floating-search {
+    position: absolute;
+    top: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    display: flex;
+    gap: 0.5rem;
+    width: 400px;
+    max-width: 90%;
+    background: #fff;
+    padding: 0.5rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-color);
+}
+
+.floating-search input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 0.5rem;
+    outline: none;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    font-family: var(--font-family);
 }
 
 .main-content {
@@ -317,7 +341,8 @@ body.dark-mode {
 body.dark-mode .primary-btn { color: #111827; }
 body.dark-mode .login-card, 
 body.dark-mode .modal-card,
-body.dark-mode .control-btn {
+body.dark-mode .control-btn,
+body.dark-mode .floating-search {
     background: #1f2937;
     border-color: #374151;
 }
@@ -326,7 +351,8 @@ body.dark-mode .input-container input,
 body.dark-mode .form-group input,
 body.dark-mode .form-group textarea,
 body.dark-mode .modal-body,
-body.dark-mode #commentsList {
+body.dark-mode #commentsList,
+body.dark-mode .floating-search input {
     background-color: #111827;
     color: #f9fafb;
     border-color: #374151;
