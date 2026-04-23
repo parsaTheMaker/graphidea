@@ -32,14 +32,19 @@
     <!-- App Container -->
     <div id="appContainer" class="hidden app-layout">
         <aside class="sidebar">
-            <div class="sidebar-header">
-                <h2>Brainstorming</h2>
-                <p>Submit a new concept</p>
+            <div class="sidebar-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h2>Brainstorming</h2>
+                    <p>Submit a new concept</p>
+                </div>
+                <!-- 4. Dark Mode Toggle -->
+                <button id="darkModeToggle" class="btn secondary-btn" style="padding: 0.5rem; font-size: 1.2rem;">🌙</button>
             </div>
 
             <!-- 1. Search and Filter -->
             <div class="search-section form-group">
-                <input type="text" id="searchInput" placeholder="Search ideas or authors...">
+                <input type="text" id="searchInput" placeholder="Semantic AI Search...">
+                <button id="searchBtn" class="btn secondary-btn btn-block" style="margin-top: 5px;">Search</button>
             </div>
 
             <hr class="sidebar-divider">
@@ -57,6 +62,11 @@
                     <label for="ideaDesc">Description</label>
                     <textarea id="ideaDesc" rows="5" placeholder="Explain how it works..." required></textarea>
                 </div>
+                <!-- 2. Categories / Tags -->
+                <div class="form-group">
+                    <label for="ideaTags">Category Tags</label>
+                    <input type="text" id="ideaTags" placeholder="e.g. marketing, design">
+                </div>
                 <button type="submit" id="submitBtn" class="btn primary-btn btn-block">Add to Graph</button>
             </form>
             <div id="statusMsg" class="status-msg"></div>
@@ -70,6 +80,7 @@
         <main class="main-content">
             <!-- 4. Canvas Controls -->
             <div class="canvas-controls">
+                <button id="gatherBtn" class="btn control-btn" title="Gather Nodes" style="font-weight: bold; font-family: monospace;">&gt;&lt;</button>
                 <button id="zoomInBtn" class="btn control-btn" title="Zoom In">+</button>
                 <button id="zoomOutBtn" class="btn control-btn" title="Zoom Out">-</button>
                 <button id="fitViewBtn" class="btn control-btn" title="Fit to Screen">[ ]</button>
@@ -87,7 +98,10 @@
             <!-- View Mode -->
             <div id="modalViewMode">
                 <h3 id="modalTitle">Title</h3>
-                <span class="badge" id="modalAuthor">Name</span>
+                <div>
+                    <span class="badge" id="modalAuthor">Name</span>
+                    <span class="badge" id="modalTagsDisplay" style="background:var(--primary-color);color:#fff;">Tags</span>
+                </div>
 
                 <div class="modal-body">
                     <p id="modalDesc">Description goes here...</p>
@@ -97,9 +111,23 @@
                     <span id="modalVotesDisplay">0 Votes</span>
                 </div>
 
+                <!-- 3. Comments Section -->
+                <div class="comments-section" style="margin-top: 1rem;">
+                    <h4>Discussion</h4>
+                    <div id="commentsList" style="max-height: 100px; overflow-y: auto; background: #f9fafb; padding: 0.5rem; border-radius: 6px; font-size: 0.85rem; border: 1px solid var(--border-color); margin-bottom: 0.5rem;">
+                        <!-- Comments injected here -->
+                    </div>
+                    <div style="display: flex; gap: 5px;">
+                        <input type="text" id="newCommentInput" placeholder="Add a comment..." style="flex:1; padding: 0.5rem; font-size:0.85rem; border: 1px solid var(--border-color); border-radius: 4px;">
+                        <button id="addCommentBtn" class="btn primary-btn" style="padding: 0.5rem 0.75rem; font-size: 0.85rem;">Post</button>
+                    </div>
+                </div>
+
                 <div class="modal-actions modal-footer">
-                    <!-- 3. Upvote Button -->
-                    <button id="modalUpvoteBtn" class="btn primary-btn">Upvote</button>
+                    <!-- Upvote/Downvote -->
+                    <button id="modalUpvoteBtn" class="btn primary-btn">👍 Upvote</button>
+                    <button id="modalDownvoteBtn" class="btn secondary-btn" style="color:var(--danger-color)">👎</button>
+                    <div style="flex:1;"></div>
                     <button id="modalEditBtn" class="btn secondary-btn">Edit Idea</button>
                     <button id="modalDeleteBtn" class="btn danger-btn">Delete Node</button>
                 </div>
@@ -120,6 +148,10 @@
                 <div class="form-group">
                     <label for="editIdeaDesc">Description</label>
                     <textarea id="editIdeaDesc" rows="5" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="editIdeaTags">Category Tags</label>
+                    <input type="text" id="editIdeaTags">
                 </div>
 
                 <div id="editStatusMsg" class="status-msg"></div>

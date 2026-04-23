@@ -28,12 +28,20 @@ const saveEditBtn = document.getElementById('saveEditBtn');
 const cancelEditBtn = document.getElementById('cancelEditBtn');
 
 const searchInput = document.getElementById('searchInput');
+const searchBtn = document.getElementById('searchBtn');
 const exportBtn = document.getElementById('exportBtn');
 const zoomInBtn = document.getElementById('zoomInBtn');
 const zoomOutBtn = document.getElementById('zoomOutBtn');
 const fitViewBtn = document.getElementById('fitViewBtn');
+const gatherBtn = document.getElementById('gatherBtn');
 const modalUpvoteBtn = document.getElementById('modalUpvoteBtn');
+const modalDownvoteBtn = document.getElementById('modalDownvoteBtn');
 const modalVotesDisplay = document.getElementById('modalVotesDisplay');
+const darkModeToggle = document.getElementById('darkModeToggle');
+
+const addCommentBtn = document.getElementById('addCommentBtn');
+const newCommentInput = document.getElementById('newCommentInput');
+const commentsList = document.getElementById('commentsList');
 
 let allIdeas = []; 
 let network = null;
@@ -73,14 +81,22 @@ function cosineSimilarity(vecA, vecB) {
     return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
 }
 
-// Generate distinct pastel colors based on name strings
 function getColorFromName(name) {
     let hash = 0;
     for (let i = 0; i < name.length; i++) {
         hash = name.charCodeAt(i) + ((hash << 5) - hash);
     }
     const hue = Math.abs(hash) % 360;
-    return `hsl(${hue}, 80%, 85%)`; // Pastel soft color
+    return `hsl(${hue}, 80%, 85%)`; 
+}
+
+// Node Size Calculator
+function getNodeSize(votes, downvotes) {
+    const score = (votes || 0) - (downvotes || 0);
+    return {
+        font: Math.max(10, 14 + (score * 1.5)),
+        margin: Math.max(8, 14 + score)
+    };
 }
 
 // Handle Form Submission
@@ -92,19 +108,20 @@ form.addEventListener('submit', async (e) => {
     const name = document.getElementById('authorName').value;
     const title = document.getElementById('ideaTitle').value;
     const desc = document.getElementById('ideaDesc').value;
+    const tags = document.getElementById('ideaTags').value || '';
 
     statusMsg.innerText = "Analyzing idea concept...";
 
     try {
         const extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
-        const textToEmbed = title + ". " + desc;
+        const textToEmbed = title + ". " + desc + ". " + tags;
         const output = await extractor(textToEmbed, { pooling: 'mean', normalize: true });
         const embeddingArray = Array.from(output.data);
 
         statusMsg.innerText = "Saving to workspace...";
 
         const { error } = await supabase.from('ideas').insert([
-            { name: name, title: title, description: desc, embedding: embeddingArray }
+            { name: name, title: title, description: desc, tags: tags, embedding: embeddingArray }
         ]);
 
         if (error) throw error;
@@ -135,9 +152,10 @@ async function loadGraph() {
     const nodes = [];
     const edges = [];
 
-    // Minimal / Professional styling for Nodes
+    // Styling for Nodes
     allIdeas.forEach(idea => {
         const authorColor = getColorFromName(idea.name || "Unknown");
+        const size = getNodeSize(idea.votes, idea.downvotes);
         nodes.push({ 
             id: idea.id, 
             label: idea.title, 
@@ -149,8 +167,8 @@ async function loadGraph() {
                 highlight: { background: authorColor, border: '#111827' },
                 hover: { background: authorColor, border: '#9ca3af' }
             },
-            font: { color: '#111827', face: 'Inter', size: 14 + ((idea.votes || 0) * 1.5), multi: true },
-            margin: 14 + (idea.votes || 0), // Increased margin for inside padding
+            font: { color: '#111827', face: 'Inter', size: size.font, multi: true },
+            margin: size.margin,
             shadow: {
                 enabled: true,
                 color: 'rgba(0,0,0,0.08)',
@@ -161,7 +179,6 @@ async function loadGraph() {
         });
     });
 
-    // Calculate Average Similarity
     let totalSimilarity = 0;
     let pairCount = 0;
     let pairs = [];
@@ -177,14 +194,17 @@ async function loadGraph() {
 
     const avgSimilarity = pairCount > 0 ? (totalSimilarity / pairCount) : 0;
 
-    // Connect if above average
+    // Connect if above average + Opacity/Width Scaling
     pairs.forEach(pair => {
         if (pair.similarity > avgSimilarity) {
+            // Scale thickness from 1 to 5 based on similarity distance past average
+            const edgeWeight = 1 + (pair.similarity - avgSimilarity) * 10;
+            const edgeOpacity = Math.min(1, 0.3 + (pair.similarity - avgSimilarity) * 2);
             edges.push({ 
                 from: pair.from, 
                 to: pair.to, 
-                color: { color: '#d1d5db', highlight: '#111827' },
-                width: 1.5,
+                color: { color: `rgba(28, 30, 33, ${edgeOpacity})`, highlight: '#111827' },
+                width: edgeWeight,
                 smooth: { type: 'continuous' }
             });
         }
@@ -194,11 +214,11 @@ async function loadGraph() {
     const graphData = { nodes: new vis.DataSet(nodes), edges: new vis.DataSet(edges) };
     const options = { 
         physics: { 
-            stabilization: true, 
+            stabilization: { enabled: true, iterations: 150 },
             barnesHut: { 
-                springLength: 300, 
+                springLength: 200, 
                 springConstant: 0.04,
-                centralGravity: 0.1,
+                centralGravity: 0.25,
                 avoidOverlap: 1
             } 
         },
@@ -208,7 +228,6 @@ async function loadGraph() {
     if (network) network.destroy();
     network = new vis.Network(container, graphData, options);
 
-    // Left Click Event for Modal
     network.on("click", function (params) {
         if (params.nodes.length > 0) {
             const clickedNodeId = params.nodes[0];
@@ -217,7 +236,23 @@ async function loadGraph() {
     });
 }
 
-// Modal Logic
+function renderComments(idea) {
+    commentsList.innerHTML = '';
+    const comments = idea.comments || [];
+    if (comments.length === 0) {
+        commentsList.innerHTML = '<span style="color:var(--text-secondary)">No comments yet.</span>';
+        return;
+    }
+    comments.forEach(c => {
+        const div = document.createElement('div');
+        div.style.marginBottom = '0.5rem';
+        div.style.borderBottom = '1px solid var(--border-color)';
+        div.style.paddingBottom = '0.25rem';
+        div.innerHTML = `<strong>${c.user}</strong>: ${c.text}`;
+        commentsList.appendChild(div);
+    });
+}
+
 function openViewModal(nodeId) {
     const idea = allIdeas.find(i => i.id === nodeId);
     if (!idea) return;
@@ -231,11 +266,14 @@ function openViewModal(nodeId) {
     document.getElementById('modalAuthor').innerText = idea.name;
     document.getElementById('modalDesc').innerText = idea.description;
     
-    // Upvote data
-    modalVotesDisplay.innerText = `${idea.votes || 0} Votes`;
+    document.getElementById('modalTagsDisplay').innerText = idea.tags || 'No Tags';
     
+    const score = (idea.votes || 0) - (idea.downvotes || 0);
+    modalVotesDisplay.innerText = `${score >= 0 ? '+' : ''}${score} Votes`;
+    
+    renderComments(idea);
+
     document.getElementById('editStatusMsg').innerText = "";
-    
     modal.classList.remove('hidden');
 }
 
@@ -250,12 +288,32 @@ function openEditMode() {
     document.getElementById('editAuthorName').value = idea.name;
     document.getElementById('editIdeaTitle').value = idea.title;
     document.getElementById('editIdeaDesc').value = idea.description;
+    document.getElementById('editIdeaTags').value = idea.tags || '';
 }
 
-// Delete from View Mode
+// Comments Logic
+addCommentBtn.addEventListener('click', async () => {
+    if (!currentViewedNodeId) return;
+    const txt = newCommentInput.value.trim();
+    if (!txt) return;
+
+    const idea = allIdeas.find(i => i.id === currentViewedNodeId);
+    const existingComments = idea.comments || [];
+    const newCommentList = [...existingComments, { user: "Team Member", text: txt }];
+
+    addCommentBtn.innerText = '...';
+    try {
+        await supabase.from('ideas').update({ comments: newCommentList }).eq('id', currentViewedNodeId);
+        idea.comments = newCommentList;
+        newCommentInput.value = '';
+        renderComments(idea);
+    } catch(e) { console.error(e); }
+    addCommentBtn.innerText = 'Post';
+});
+
+// Delete
 modalDeleteBtn.addEventListener('click', async () => {
     if (!currentViewedNodeId) return;
-    
     if (confirm("Are you sure you want to delete this idea? This action cannot be undone.")) {
         const oldText = modalDeleteBtn.innerText;
         modalDeleteBtn.innerText = "Deleting...";
@@ -276,7 +334,7 @@ modalDeleteBtn.addEventListener('click', async () => {
     }
 });
 
-// Edit from View Mode
+// Edit
 modalEditBtn.addEventListener('click', openEditMode);
 
 // Save Edit
@@ -287,6 +345,7 @@ saveEditBtn.addEventListener('click', async () => {
     const name = document.getElementById('editAuthorName').value;
     const title = document.getElementById('editIdeaTitle').value;
     const desc = document.getElementById('editIdeaDesc').value;
+    const tags = document.getElementById('editIdeaTags').value;
 
     saveEditBtn.disabled = true;
     saveEditBtn.innerText = "Saving...";
@@ -294,7 +353,7 @@ saveEditBtn.addEventListener('click', async () => {
 
     try {
         const extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
-        const textToEmbed = title + ". " + desc;
+        const textToEmbed = title + ". " + desc + ". " + tags;
         const output = await extractor(textToEmbed, { pooling: 'mean', normalize: true });
         const embeddingArray = Array.from(output.data);
 
@@ -304,6 +363,7 @@ saveEditBtn.addEventListener('click', async () => {
             name: name,
             title: title,
             description: desc,
+            tags: tags,
             embedding: embeddingArray
         }).eq('id', id);
 
@@ -326,85 +386,162 @@ saveEditBtn.addEventListener('click', async () => {
     }
 });
 
-// Cancel Edit
 cancelEditBtn.addEventListener('click', () => {
-    openViewModal(currentViewedNodeId); // simply reset view
+    openViewModal(currentViewedNodeId);
 });
 
-// Close Modal Controls
 closeBtn.onclick = () => modal.classList.add('hidden');
 window.onclick = (e) => { 
     if (e.target === modal) modal.classList.add('hidden'); 
 };
 
-// --- NEW FEATURES ---
-
-// Search Filter
-searchInput.addEventListener('input', (e) => {
+// Search Filter (Semantic!)
+searchBtn.addEventListener('click', async () => {
     if (!network) return;
-    const term = e.target.value.toLowerCase();
-    const updateNodes = [];
-    allIdeas.forEach(idea => {
-        const match = (idea.title && idea.title.toLowerCase().includes(term)) || 
-                      (idea.name && idea.name.toLowerCase().includes(term));
-        updateNodes.push({ id: idea.id, hidden: !match });
-    });
-    network.body.data.nodes.update(updateNodes);
+    const term = searchInput.value.trim();
+    
+    if (!term) {
+        // Reset hiding
+        const updateNodes = allIdeas.map(idea => ({ id: idea.id, hidden: false }));
+        network.body.data.nodes.update(updateNodes);
+        return;
+    }
+
+    searchBtn.innerText = "🔍...";
+    searchBtn.disabled = true;
+
+    try {
+        const extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+        const output = await extractor(term, { pooling: 'mean', normalize: true });
+        const searchVec = Array.from(output.data);
+
+        const updateNodes = [];
+        allIdeas.forEach(idea => {
+            const sim = cosineSimilarity(searchVec, idea.embedding);
+            // Hide nodes with low similarity to the query
+            updateNodes.push({ id: idea.id, hidden: sim < 0.25 }); 
+        });
+        network.body.data.nodes.update(updateNodes);
+    } catch(e) {
+        console.error("Semantic search failed", e);
+    }
+    
+    searchBtn.innerText = "Search";
+    searchBtn.disabled = false;
 });
 
-// Canvas Controls
+// Allow enter key inside search
+searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') searchBtn.click();
+});
+
+// Canvas Controls (Fix Animation Interferences)
 zoomInBtn.addEventListener('click', () => {
-    if (network) network.moveTo({ scale: network.getScale() * 1.2 });
+    if (network) {
+        const currentScale = network.getScale();
+        network.moveTo({ scale: currentScale * 1.5, animation: { duration: 300 } });
+    }
 });
 
 zoomOutBtn.addEventListener('click', () => {
-    if (network) network.moveTo({ scale: network.getScale() / 1.2 });
+    if (network) {
+        const currentScale = network.getScale();
+        network.moveTo({ scale: currentScale / 1.5, animation: { duration: 300 } });
+    }
 });
 
 fitViewBtn.addEventListener('click', () => {
-    if (network) network.fit();
+    if (network) network.fit({ animation: { duration: 500 } });
+});
+
+// Gather Nodes Automatically
+gatherBtn.addEventListener('click', () => {
+    if (!network) return;
+    
+    // Temporarily increase gravity to pull nodes together
+    network.setOptions({
+        physics: {
+            barnesHut: {
+                centralGravity: 0.8,
+                springLength: 100
+            }
+        }
+    });
+
+    // Return to normal resting physics after a brief pull
+    setTimeout(() => {
+        network.setOptions({
+            physics: {
+                barnesHut: {
+                    centralGravity: 0.25,
+                    springLength: 200
+                }
+            }
+        });
+    }, 1200);
 });
 
 // Export Graph as Image
 exportBtn.addEventListener('click', () => {
-    const canvas = document.querySelector('#mynetwork canvas');
+    const canvas = document.querySelector('.vis-network canvas'); // More robust selector
     if (canvas) {
         const url = canvas.toDataURL('image/png');
         const a = document.createElement('a');
         a.href = url;
         a.download = 'Brainstorming_Graph.png';
+        document.body.appendChild(a);
         a.click();
+        document.body.removeChild(a);
+    } else {
+        alert("Canvas not loaded yet!");
     }
 });
 
-// Upvote Logic
-modalUpvoteBtn.addEventListener('click', async () => {
+// Voting Logic
+async function castVote(isUpvote) {
     if (!currentViewedNodeId) return;
     const idea = allIdeas.find(i => i.id === currentViewedNodeId);
-    const newVotes = (idea.votes || 0) + 1;
+    
+    let newUp = idea.votes || 0;
+    let newDown = idea.downvotes || 0;
+    
+    if (isUpvote) newUp += 1;
+    else newDown += 1;
+    
+    const updatePayload = { votes: newUp, downvotes: newDown };
     
     modalUpvoteBtn.disabled = true;
-    modalUpvoteBtn.innerText = "Voting...";
+    modalDownvoteBtn.disabled = true;
 
-    const { error } = await supabase.from('ideas').update({ votes: newVotes }).eq('id', currentViewedNodeId);
+    const { error } = await supabase.from('ideas').update(updatePayload).eq('id', currentViewedNodeId);
     
     modalUpvoteBtn.disabled = false;
-    modalUpvoteBtn.innerText = "Upvote";
+    modalDownvoteBtn.disabled = false;
 
     if (!error) {
-        idea.votes = newVotes;
-        modalVotesDisplay.innerText = `${newVotes} Votes`;
+        idea.votes = newUp;
+        idea.downvotes = newDown;
+        const score = newUp - newDown;
+        modalVotesDisplay.innerText = `${score >= 0 ? '+' : ''}${score} Votes`;
         
-        // Dynamically update the visual size on the graph
         if (network) {
+            const size = getNodeSize(newUp, newDown);
             network.body.data.nodes.update([{ 
                 id: currentViewedNodeId, 
-                font: { size: 14 + (newVotes * 1.5) },
-                margin: 14 + newVotes
+                font: { size: size.font },
+                margin: size.margin
             }]);
         }
     } else {
-        console.error("Failed to upvote", error);
-        alert("Error upvoting. Please try again.");
+        console.error("Failed to vote", error);
+        alert("Error voting. Please try again.");
     }
+}
+
+modalUpvoteBtn.addEventListener('click', () => castVote(true));
+modalDownvoteBtn.addEventListener('click', () => castVote(false));
+
+// Dark mode toggle
+darkModeToggle.addEventListener('click', () => {
+    document.body.classList.toggle('dark-mode');
 });

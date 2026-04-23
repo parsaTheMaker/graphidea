@@ -299,3 +299,47 @@ h3 { font-size: 1.25rem; margin-bottom: 1rem; }
 
 .status-msg { color: var(--text-secondary); }
 .error-msg { color: var(--danger-color); }
+
+/* --- DARK MODE --- */
+body.dark-mode {
+    --bg-color: #111827;
+    --sidebar-bg: #1f2937;
+    --text-primary: #f9fafb;
+    --text-secondary: #9ca3af;
+    --border-color: #374151;
+    --primary-color: #f3f4f6;
+    --primary-hover: #e5e7eb;
+    
+    background-color: var(--bg-color);
+}
+
+body.dark-mode .primary-btn { color: #111827; }
+body.dark-mode .login-card, 
+body.dark-mode .modal-card,
+body.dark-mode .control-btn {
+    background: #1f2937;
+    border-color: #374151;
+}
+
+body.dark-mode .input-container input,
+body.dark-mode .form-group input,
+body.dark-mode .form-group textarea,
+body.dark-mode .modal-body,
+body.dark-mode #commentsList {
+    background-color: #111827;
+    color: #f9fafb;
+    border-color: #374151;
+}
+
+body.dark-mode .secondary-btn,
+body.dark-mode .danger-btn {
+    background-color: #1f2937; 
+}
+body.dark-mode .secondary-btn:hover { background-color: #374151; }
+
+body.dark-mode .badge {
+    background-color: #374151;
+    color: #f9fafb;
+}
+
+body.dark-mode .control-btn:hover { background-color: #374151; }
