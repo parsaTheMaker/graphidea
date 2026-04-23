@@ -280,8 +280,28 @@ function renderComments(idea) {
         div.style.marginBottom = '0.5rem';
         div.style.borderBottom = '1px solid var(--border-color)';
         div.style.paddingBottom = '0.25rem';
-        div.innerHTML = `<strong>${c.user}</strong>: ${c.text}`;
+        div.style.display = 'flex';
+        div.style.justifyContent = 'space-between';
+        
+        div.innerHTML = `<div><strong>${c.user}</strong>: ${c.text}</div>
+                         <button class="delete-comment-btn" data-id="${c.id || c.text}" style="background:none; border:none; color: var(--danger-color); cursor:pointer;" title="Delete Comment">🗑️</button>`;
         commentsList.appendChild(div);
+    });
+
+    const delBtns = commentsList.querySelectorAll('.delete-comment-btn');
+    delBtns.forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const commentIdToDelete = e.currentTarget.getAttribute('data-id');
+            // Fallback for old comments without ID
+            const newCommentList = idea.comments.filter(c => (c.id || c.text) !== commentIdToDelete);
+            
+            idea.comments = newCommentList;
+            renderComments(idea);
+            
+            try {
+                await supabase.from('ideas').update({ comments: newCommentList }).eq('id', idea.id);
+            } catch(err) { console.error(err); }
+        });
     });
 }
 
@@ -327,11 +347,13 @@ function openEditMode() {
 addCommentBtn.addEventListener('click', async () => {
     if (!currentViewedNodeId) return;
     const txt = newCommentInput.value.trim();
+    const user = document.getElementById('newCommenterName').value.trim() || "Anonymous";
     if (!txt) return;
 
     const idea = allIdeas.find(i => i.id === currentViewedNodeId);
     const existingComments = idea.comments || [];
-    const newCommentList = [...existingComments, { user: "Team Member", text: txt }];
+    const commentId = Date.now().toString() + Math.random().toString().slice(2, 6);
+    const newCommentList = [...existingComments, { id: commentId, user: user, text: txt }];
 
     addCommentBtn.innerText = '...';
     try {
