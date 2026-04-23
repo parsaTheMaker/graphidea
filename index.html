@@ -101,17 +101,28 @@
 
             <!-- View Mode -->
             <div id="modalViewMode">
-                <h3 id="modalTitle">Title</h3>
-                <div>
-                    <span class="badge" id="modalAuthor">Name</span>
-                    <span class="badge" id="modalTagsDisplay" style="background:var(--primary-color);color:#fff;">Tags</span>
+                <div style="margin-bottom: 0.75rem; display: flex; align-items: baseline; gap: 0.5rem;">
+                    <strong style="color: var(--text-secondary);">Idea:</strong> 
+                    <h3 id="modalTitle" style="margin: 0; font-size: 1.25rem;">Title</h3>
+                </div>
+                
+                <div style="margin-bottom: 0.75rem; display: flex; align-items: baseline; gap: 0.5rem;">
+                    <strong style="color: var(--text-secondary);">Creator:</strong> 
+                    <span class="badge" id="modalAuthor" style="margin-bottom: 0;">Name</span>
+                </div>
+                
+                <div style="margin-bottom: 1.25rem; display: flex; align-items: baseline; gap: 0.5rem;">
+                    <strong style="color: var(--text-secondary);">Tags:</strong> 
+                    <span class="badge" id="modalTagsDisplay" style="background:var(--primary-color);color:#fff;margin-bottom: 0;">Tags</span>
                 </div>
 
                 <div class="modal-body">
+                    <strong style="color: var(--text-secondary); display: block; margin-bottom: 0.25rem;">Description:</strong>
                     <p id="modalDesc">Description goes here...</p>
                 </div>
                 
-                <div class="votes-section">
+                <div class="votes-section" style="margin-bottom: 1rem;">
+                    <strong style="color: var(--text-secondary); margin-right: 0.5rem;">Score:</strong>
                     <span id="modalVotesDisplay">0 Votes</span>
                 </div>
 
@@ -127,13 +138,13 @@
                     </div>
                 </div>
 
-                <div class="modal-actions modal-footer">
+                <div class="modal-actions modal-footer" style="align-items: center; border-top: 1px solid var(--border-color); padding-top: 1rem;">
                     <!-- Upvote/Downvote -->
-                    <button id="modalUpvoteBtn" class="btn primary-btn">👍 Upvote</button>
-                    <button id="modalDownvoteBtn" class="btn secondary-btn" style="color:var(--danger-color)">👎</button>
+                    <button id="modalUpvoteBtn" class="btn" style="background-color: #22c55e; border-color: #16a34a; color: white; font-size: 1.25rem; padding: 0.5rem 1rem;" title="Upvote">👍</button>
+                    <button id="modalDownvoteBtn" class="btn" style="background-color: #ef4444; border-color: #dc2626; color: white; font-size: 1.25rem; padding: 0.5rem 1rem;" title="Downvote">👎</button>
                     <div style="flex:1;"></div>
-                    <button id="modalEditBtn" class="btn secondary-btn">Edit Idea</button>
-                    <button id="modalDeleteBtn" class="btn danger-btn">Delete Node</button>
+                    <button id="modalEditBtn" class="btn secondary-btn">Edit</button>
+                    <button id="modalDeleteBtn" class="btn danger-btn">Delete</button>
                 </div>
             </div>
 
