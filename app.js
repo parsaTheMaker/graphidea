@@ -65,6 +65,16 @@ function cosineSimilarity(vecA, vecB) {
     return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
 }
 
+// Generate distinct pastel colors based on name strings
+function getColorFromName(name) {
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+        hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const hue = Math.abs(hash) % 360;
+    return `hsl(${hue}, 80%, 85%)`; // Pastel soft color
+}
+
 // Handle Form Submission
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -119,25 +129,26 @@ async function loadGraph() {
 
     // Minimal / Professional styling for Nodes
     allIdeas.forEach(idea => {
+        const authorColor = getColorFromName(idea.name || "Unknown");
         nodes.push({ 
             id: idea.id, 
             label: idea.title, 
             shape: 'box',
-            borderWidth: 1,
+            borderWidth: 2,
             color: {
-                background: '#ffffff',
+                background: authorColor,
                 border: '#e5e7eb',
-                highlight: { background: '#f9fafb', border: '#111827' },
-                hover: { background: '#f3f4f6', border: '#9ca3af' }
+                highlight: { background: authorColor, border: '#111827' },
+                hover: { background: authorColor, border: '#9ca3af' }
             },
             font: { color: '#111827', face: 'Inter', size: 14, multi: true },
-            margin: 10,
+            margin: 14, // Increased margin for inside padding
             shadow: {
                 enabled: true,
-                color: 'rgba(0,0,0,0.05)',
-                size: 4,
+                color: 'rgba(0,0,0,0.08)',
+                size: 6,
                 x: 0,
-                y: 2
+                y: 3
             }
         });
     });
@@ -174,7 +185,15 @@ async function loadGraph() {
     const container = document.getElementById('mynetwork');
     const graphData = { nodes: new vis.DataSet(nodes), edges: new vis.DataSet(edges) };
     const options = { 
-        physics: { stabilization: true, barnesHut: { springLength: 150, springConstant: 0.05 } },
+        physics: { 
+            stabilization: true, 
+            barnesHut: { 
+                springLength: 300, 
+                springConstant: 0.04,
+                centralGravity: 0.1,
+                avoidOverlap: 1
+            } 
+        },
         interaction: { hover: true, tooltipDelay: 200 }
     };
     
