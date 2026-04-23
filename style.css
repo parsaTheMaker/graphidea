@@ -162,6 +162,7 @@ h3 { font-size: 1.25rem; margin-bottom: 1rem; }
     padding: 1.5rem;
     box-shadow: var(--shadow-sm);
     z-index: 10;
+    overflow-y: auto;
 }
 
 .sidebar-header { margin-bottom: 1.5rem; }
